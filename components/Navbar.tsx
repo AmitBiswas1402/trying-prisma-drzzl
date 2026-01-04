@@ -2,7 +2,7 @@ import { Link2 } from "lucide-react";
 import Link from "next/link";
 import DesktopNavbar from "./DesktopNavbar";
 import { currentUser } from "@clerk/nextjs/server";
-import { syncUser } from "@/actions/user.actions";
+import { syncUser } from "@/actions/users.action";
 
 async function Navbar() {
   const user = await currentUser();
