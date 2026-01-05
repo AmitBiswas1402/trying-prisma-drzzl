@@ -43,18 +43,30 @@ export async function getUserByClerkId(clerkId: string) {
       username: users.username,
       image: users.image,
       clerkId: users.clerkId,
+
+      bio: users.bio,
+      website: users.website,
+      location: users.location,
+
       followersCount: sql<number>`count(distinct ${follows.followerId})`,
       followingCount: sql<number>`count(distinct ${follows.followingId})`,
       postsCount: sql<number>`count(distinct posts.id)`,
     })
     .from(users)
-    .leftJoin(follows, eq(follows.followingId, users.id))
-    .leftJoin(sql`posts`, sql`posts.author_id = users.id`)
+    .leftJoin(
+      follows,
+      eq(follows.followingId, users.id)
+    )
+    .leftJoin(
+      sql`posts`,
+      sql`posts.author_id = users.id`
+    )
     .where(eq(users.clerkId, clerkId))
     .groupBy(users.id);
 
   return user ?? null;
 }
+
 
 export async function getDbUserId() {
   const { userId: clerkId } = await auth();
