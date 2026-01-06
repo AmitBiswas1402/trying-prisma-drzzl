@@ -3,6 +3,10 @@ import { useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Avatar, AvatarImage } from "./ui/avatar";
 import { Textarea } from "./ui/textarea";
+import { Button } from "./ui/button";
+import { ImageIcon, Loader2Icon, SendIcon } from "lucide-react";
+import { createPost } from "@/actions/post.action";
+import toast from "react-hot-toast";
 
 const CreatePost = () => {
   const { user } = useUser();
@@ -11,7 +15,27 @@ const CreatePost = () => {
   const [isPosting, setIsPosting] = useState(false);
   const [showImageUpload, setShowImageUpload] = useState(false);
 
-  const handleSubmit = () => {};
+  const handleSubmit = async() => {
+    if (!content.trim() && !imageURL) return;
+
+    setIsPosting(true);
+    try {
+      const result = await createPost(content, imageURL);
+
+      if (result?.success) {
+        setContent("");
+        setImageURL("");
+        setShowImageUpload(false);
+        
+        toast.success("Post created successfully");
+      }
+    } catch (error) {
+      console.log("Error in createPost", error);
+      toast.error("Error creating post");
+    } finally {
+      setIsPosting(false);
+    }
+  };
 
   return (
     <Card className="mb-6">
@@ -28,6 +52,45 @@ const CreatePost = () => {
               onChange={(e) => setContent(e.target.value)}
               disabled={isPosting}
             />
+          </div>
+
+          {/* {(showImageUpload || imageUrl) && (
+            <div className="border rounded-lg p-4">
+              <ImageUpload
+                endpoint="postImage"
+                value={imageUrl}
+                onChange={(url) => {
+                  setImageUrl(url)
+                  if(!url) setShowImageUpload(false)
+                }}
+              />
+            </div>
+          )} */}
+
+          <div className="flex items-center justify-between border-t pt-4">
+            <div className="flex space-x-2">
+              <Button type="button" variant="ghost" size="sm" className="text-muted-foreground hover:text-primary" onClick={() => setShowImageUpload}>
+                <ImageIcon className="size-4 mr-2" />
+                Photo 
+              </Button>              
+            </div>
+            <Button
+            className="flex items-center"
+            onClick={handleSubmit}
+            disabled={(!content.trim() && !imageURL) || isPosting} 
+            >
+              {isPosting ? (
+                <>
+                  <Loader2Icon className="size-4 mr-2 animate-spin" />
+                  Posting...
+                </>
+              ) : (
+                <>
+                  <SendIcon className="size-4 mr-2" />
+                  Post
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </CardContent>
