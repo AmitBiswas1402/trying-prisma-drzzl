@@ -1,3 +1,5 @@
+"use client";
+
 import { useUser } from "@clerk/nextjs";
 import { useState } from "react";
 import { Card, CardContent } from "./ui/card";
@@ -6,7 +8,8 @@ import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
 import { ImageIcon, Loader2Icon, SendIcon } from "lucide-react";
 import { createPost } from "@/actions/post.action";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
+import ImageUpload from "./ImageUpload";
 
 const CreatePost = () => {
   const { user } = useUser();
@@ -15,7 +18,7 @@ const CreatePost = () => {
   const [isPosting, setIsPosting] = useState(false);
   const [showImageUpload, setShowImageUpload] = useState(false);
 
-  const handleSubmit = async() => {
+  const handleSubmit = async () => {
     if (!content.trim() && !imageURL) return;
 
     setIsPosting(true);
@@ -26,8 +29,7 @@ const CreatePost = () => {
         setContent("");
         setImageURL("");
         setShowImageUpload(false);
-        
-        toast.success("Post created successfully");
+        toast("Message Posted");
       }
     } catch (error) {
       console.log("Error in createPost", error);
@@ -38,46 +40,75 @@ const CreatePost = () => {
   };
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 shadow-[0_6px_20px_rgba(0,0,0,0.08)] rounded-2xl">
       <CardContent className="pt-6">
-        <div className="space-y-4">
-          <div className="flex space-x-4">
-            <Avatar className="w-10 h-10">
+        <div className="space-y-5">
+          {/* INPUT ROW */}
+          <div className="flex gap-4">
+            <Avatar className="w-10 h-10 border border-gray-200 shadow-sm">
               <AvatarImage src={user?.imageUrl || "/avatar.png"} />
             </Avatar>
+
             <Textarea
-              placeholder="Write..."
-              className="min-h-25px resize-none border-none focus-visible:ring-0 p-0 text-base"
+              placeholder="Write something..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
               disabled={isPosting}
+              className="
+              flex-1
+              resize-none
+              rounded-xl
+              bg-zinc-800
+              border-0 border-zinc-700
+              p-4
+              text-white placeholder-zinc-400
+              caret-white
+              outline-none
+              focus-visible:ring-2 focus-visible:ring-blue-500
+              transition
+            "
             />
           </div>
 
-          {/* {(showImageUpload || imageUrl) && (
-            <div className="border rounded-lg p-4">
+          {/* IMAGE UPLOAD */}
+          {(showImageUpload || imageURL) && (
+            <div className="border border-gray-200 rounded-xl p-4 bg-white shadow-sm">
               <ImageUpload
                 endpoint="postImage"
-                value={imageUrl}
+                value={imageURL}
                 onChange={(url) => {
-                  setImageUrl(url)
-                  if(!url) setShowImageUpload(false)
+                  setImageURL(url);
+                  if (!url) setShowImageUpload(false);
                 }}
               />
             </div>
-          )} */}
+          )}
 
-          <div className="flex items-center justify-between border-t pt-4">
-            <div className="flex space-x-2">
-              <Button type="button" variant="ghost" size="sm" className="text-muted-foreground hover:text-primary" onClick={() => setShowImageUpload}>
-                <ImageIcon className="size-4 mr-2" />
-                Photo 
-              </Button>              
-            </div>
+          {/* FOOTER */}
+          <div className="flex items-center justify-between border-t border-gray-200 pt-4">
+            {/* LEFT ACTIONS */}
             <Button
-            className="flex items-center"
-            onClick={handleSubmit}
-            disabled={(!content.trim() && !imageURL) || isPosting} 
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-gray-500 hover:text-blue-600 transition"
+              onClick={() => setShowImageUpload((p) => !p)}
+            >
+              <ImageIcon className="size-4 mr-2" />
+              Photo
+            </Button>
+
+            {/* SUBMIT */}
+            <Button
+              onClick={handleSubmit}
+              disabled={(!content.trim() && !imageURL) || isPosting}
+              className="
+                px-5 py-2.5 rounded-xl
+                bg-black text-white text-sm font-semibold
+                transition-all duration-300 ease-out
+                hover:bg-blue-600 hover:scale-[1.03]
+                active:scale-[0.98]
+              "
             >
               {isPosting ? (
                 <>

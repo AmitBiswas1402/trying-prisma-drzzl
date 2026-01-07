@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/ThemeProvisder";
 import { ClerkProvider } from "@clerk/nextjs";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,6 +50,7 @@ export default function RootLayout({
                       <Sidebar />
                     </div>
                     <div className="lg:col-span-9">{children}</div>
+                    <Toaster position="top-center" />
                   </div>
                 </div>
               </main>

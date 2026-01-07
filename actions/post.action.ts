@@ -6,7 +6,6 @@ import { eq, and, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDbUserId } from "./users.action";
 
-// Create Post — Prisma → Drizzle
 export async function createPost(content: string, image: string) {
   try {
     const userId = await getDbUserId();
@@ -25,7 +24,6 @@ export async function createPost(content: string, image: string) {
   }
 }
 
-// Get Posts — Prisma → Drizzle
 export async function getPosts() {
   try {
     const result = await db
@@ -41,7 +39,6 @@ export async function getPosts() {
   }
 }
 
-// Toggle Like — Prisma → Drizzle
 export async function toggleLike(postId: string) {
   try {
     const userId = await getDbUserId();
@@ -91,7 +88,6 @@ export async function toggleLike(postId: string) {
   }
 }
 
-// Create Comment — Prisma → Drizzle
 export async function createComment(postId: string, content: string) {
   try {
     const userId = await getDbUserId();
@@ -132,7 +128,6 @@ export async function createComment(postId: string, content: string) {
   }
 }
 
-// Delete Post — Prisma → Drizzle
 export async function deletePost(postId: string) {
   try {
     const userId = await getDbUserId();
