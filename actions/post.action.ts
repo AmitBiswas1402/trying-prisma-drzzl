@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { users, posts, likes, comments, notifications } from "@/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDbUserId } from "./users.action";
 
@@ -32,7 +32,69 @@ export async function getPosts() {
       .innerJoin(users, eq(users.id, posts.authorId))
       .orderBy(desc(posts.createdAt));
 
-    return result;
+    if (result.length === 0) {
+      return [];
+    }
+
+    // Fetch comments and likes for all posts
+    const postIds = result.map((item) => item.posts.id);
+    
+    // Fetch all comments with their authors
+    const allCommentsData = await db
+      .select()
+      .from(comments)
+      .innerJoin(users, eq(users.id, comments.authorId))
+      .where(inArray(comments.postId, postIds));
+
+    // Fetch all likes
+    const allLikesData = await db
+      .select({
+        userId: likes.userId,
+        postId: likes.postId,
+      })
+      .from(likes)
+      .where(inArray(likes.postId, postIds));
+
+    // Transform data to match PostCard expectations
+    const transformedPosts = result.map((item) => {
+      const postComments = allCommentsData
+        .filter((c) => c.comments.postId === item.posts.id)
+        .map((c) => ({
+          id: c.comments.id,
+          content: c.comments.content,
+          userId: c.comments.authorId,
+          createdAt: c.comments.createdAt ?? new Date(),
+          author: {
+            id: c.users.id,
+            username: c.users.username,
+            name: c.users.name,
+            image: c.users.image,
+          },
+        }));
+
+      const postLikes = allLikesData
+        .filter((l) => l.postId === item.posts.id)
+        .map((l) => ({ userId: l.userId }));
+
+      return {
+        id: item.posts.id,
+        content: item.posts.content ?? "",
+        image: item.posts.image,
+        createdAt: item.posts.createdAt ?? new Date(),
+        author: {
+          id: item.users.id,
+          username: item.users.username,
+          image: item.users.image,
+        },
+        comments: postComments,
+        likes: postLikes,
+        _count: {
+          likes: postLikes.length,
+        },
+      };
+    });
+
+    return transformedPosts;
   } catch (error) {
     console.log("Error in getPosts", error);
     throw new Error("Failed to fetch posts");
