@@ -2,9 +2,10 @@
 
 import { db } from "@/db";
 import { users, posts, likes, comments, notifications } from "@/db/schema";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDbUserId } from "./users.action";
+import { auth } from "@clerk/nextjs/server";
 
 export async function createPost(content: string, image: string) {
   try {
@@ -26,75 +27,90 @@ export async function createPost(content: string, image: string) {
 
 export async function getPosts() {
   try {
-    const result = await db
-      .select()
+    // Fetch posts with author info
+    const postsWithAuthor = await db
+      .select({
+        id: posts.id,
+        content: posts.content,
+        image: posts.image,
+        createdAt: posts.createdAt,
+        updatedAt: posts.updatedAt,
+        author: {
+          id: users.id,
+          username: users.username,
+          image: users.image,
+        },
+      })
       .from(posts)
       .innerJoin(users, eq(users.id, posts.authorId))
       .orderBy(desc(posts.createdAt));
 
-    if (result.length === 0) {
-      return [];
-    }
-
-    // Fetch comments and likes for all posts
-    const postIds = result.map((item) => item.posts.id);
+    // Fetch all likes
+    const allLikes = await db.select().from(likes);
     
     // Fetch all comments with their authors
-    const allCommentsData = await db
-      .select()
-      .from(comments)
-      .innerJoin(users, eq(users.id, comments.authorId))
-      .where(inArray(comments.postId, postIds));
-
-    // Fetch all likes
-    const allLikesData = await db
+    const allComments = await db
       .select({
-        userId: likes.userId,
+        id: comments.id,
+        content: comments.content,
+        userId: comments.authorId,
+        createdAt: comments.createdAt,
+        postId: comments.postId,
+        author: {
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          image: users.image,
+        },
+      })
+      .from(comments)
+      .innerJoin(users, eq(users.id, comments.authorId));
+
+    // Count likes per post
+    const likesCount = await db
+      .select({
         postId: likes.postId,
+        count: sql<number>`count(*)`.as("count"),
       })
       .from(likes)
-      .where(inArray(likes.postId, postIds));
+      .groupBy(likes.postId);
 
-    // Transform data to match PostCard expectations
-    const transformedPosts = result.map((item) => {
-      const postComments = allCommentsData
-        .filter((c) => c.comments.postId === item.posts.id)
-        .map((c) => ({
-          id: c.comments.id,
-          content: c.comments.content,
-          userId: c.comments.authorId,
-          createdAt: c.comments.createdAt ?? new Date(),
-          author: {
-            id: c.users.id,
-            username: c.users.username,
-            name: c.users.name,
-            image: c.users.image,
-          },
+    // Transform data to match PostCard's expected format
+    const postsData = postsWithAuthor.map((post) => {
+      const postLikes = allLikes
+        .filter((like) => like.postId === post.id)
+        .map((like) => ({ userId: like.userId }));
+      
+      const postComments = allComments
+        .filter((comment) => comment.postId === post.id)
+        .map((comment) => ({
+          id: comment.id,
+          content: comment.content,
+          userId: comment.userId,
+          createdAt: comment.createdAt ?? new Date(),
+          author: comment.author,
         }));
 
-      const postLikes = allLikesData
-        .filter((l) => l.postId === item.posts.id)
-        .map((l) => ({ userId: l.userId }));
+      const likesCountForPost = likesCount.find(
+        (lc) => lc.postId === post.id
+      )?.count ?? 0;
 
       return {
-        id: item.posts.id,
-        content: item.posts.content ?? "",
-        image: item.posts.image,
-        createdAt: item.posts.createdAt ?? new Date(),
-        author: {
-          id: item.users.id,
-          username: item.users.username,
-          image: item.users.image,
-        },
-        comments: postComments,
+        id: post.id,
+        content: post.content ?? "",
+        image: post.image,
+        createdAt: post.createdAt ?? new Date(),
+        updatedAt: post.updatedAt,
+        author: post.author,
         likes: postLikes,
+        comments: postComments,
         _count: {
-          likes: postLikes.length,
+          likes: Number(likesCountForPost),
         },
       };
     });
 
-    return transformedPosts;
+    return postsData;
   } catch (error) {
     console.log("Error in getPosts", error);
     throw new Error("Failed to fetch posts");
@@ -215,5 +231,37 @@ export async function deletePost(postId: string) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Failed to delete post:", message);
     return { success: false, error: "Failed to delete post" };
+  }
+}
+
+export async function deleteComment(commentId: string) {
+  try {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) return { success: false, error: "Unauthorized" };
+
+    // get DB user id
+    const [user] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.clerkId, clerkId))
+      .limit(1);
+
+    if (!user) return { success: false, error: "User not found" };
+
+    // delete only if author
+    await db
+      .delete(comments)
+      .where(
+        and(
+          eq(comments.id, commentId),
+          eq(comments.authorId, user.id)
+        )
+      );
+
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    console.log("Delete comment error", error);
+    return { success: false, error: "Failed to delete comment" };
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2Icon, Trash2Icon } from "lucide-react";
+import { Loader2Icon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -38,7 +38,7 @@ export function DeleteAlertDialog({
           {isDeleting ? (
             <Loader2Icon className="size-4 animate-spin" />
           ) : (
-            <Trash2Icon className="size-4" />
+            <X className="size-4" />
           )}
         </Button>
       </AlertDialogTrigger>
