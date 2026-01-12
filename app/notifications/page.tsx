@@ -59,81 +59,95 @@ const Notifications = () => {
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="border-b">
+      <Card className="overflow-hidden">
+        <CardHeader className="border-b bg-card">
           <div className="flex items-center justify-between">
-            <CardTitle>Notifications</CardTitle>
+            <CardTitle className="text-lg">Notifications</CardTitle>
             <span className="text-sm text-muted-foreground">
               {notifications.filter((n) => !n.read).length} unread
             </span>
           </div>
         </CardHeader>
+
         <CardContent className="p-0">
           <ScrollArea className="h-[calc(100vh-12rem)]">
             {notifications.length === 0 ? (
-              <div className="p-4 text-center text-muted-foreground">
+              <div className="p-6 text-center text-muted-foreground">
                 No notifications yet
               </div>
             ) : (
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`flex items-start gap-4 p-4 border-b hover:bg-muted/25 transition-colors ${
-                    !notification.read ? "bg-muted/50" : ""
-                  }`}
+                  className={`
+                  group flex gap-4 px-5 py-4 border-b
+                  transition-colors
+                  hover:bg-muted/40
+                  ${!notification.read ? "bg-muted/30" : ""}
+                `}
                 >
-                  <Avatar className="mt-1">
+                  {/* Avatar */}
+                  <Avatar className="h-9 w-9 mt-1 shrink-0">
                     <AvatarImage
                       src={notification.creator?.image ?? "/avatar.png"}
                     />
                   </Avatar>
+
+                  {/* Content */}
                   <div className="flex-1 space-y-1">
-                    <div className="flex items-center gap-2">
+                    {/* Title */}
+                    <div className="flex items-center gap-2 text-sm">
                       {getNotificationIcon(notification.type)}
                       <span>
-                        <span className="font-medium">
+                        <span className="font-medium text-foreground">
                           {notification.creator?.name ??
                             notification.creator?.username ??
                             "Unknown"}
                         </span>{" "}
-                        {notification.type === "FOLLOW"
-                          ? "started following you"
-                          : notification.type === "LIKE"
-                          ? "liked your post"
-                          : "commented on your post"}
+                        <span className="text-muted-foreground">
+                          {notification.type === "FOLLOW"
+                            ? "started following you"
+                            : notification.type === "LIKE"
+                            ? "liked your post"
+                            : "commented on your post"}
+                        </span>
                       </span>
                     </div>
 
+                    {/* Post preview */}
                     {notification.post &&
                       (notification.type === "LIKE" ||
                         notification.type === "COMMENT") && (
-                        <div className="pl-6 space-y-2">
-                          <div className="text-sm text-muted-foreground rounded-md p-2 bg-muted/30 mt-2">
-                            <p>{notification.post.content}</p>
+                        <div className="ml-6 mt-2 space-y-2">
+                          <div className="rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">
+                            <p className="line-clamp-3">
+                              {notification.post.content}
+                            </p>
+
                             {notification.post.image && (
                               <img
                                 src={notification.post.image}
                                 alt="Post content"
-                                className="mt-2 rounded-md w-full max-w-[200px] h-auto object-cover"
+                                className="mt-3 rounded-md max-h-40 w-full object-cover"
                               />
                             )}
                           </div>
 
+                          {/* Comment preview */}
                           {notification.type === "COMMENT" &&
                             notification.comment && (
-                              <div className="text-sm p-2 bg-accent/50 rounded-md">
+                              <div className="rounded-lg bg-accent/40 p-3 text-sm">
                                 {notification.comment.content}
                               </div>
                             )}
                         </div>
                       )}
 
-                    <p className="text-sm text-muted-foreground pl-6">
+                    {/* Timestamp */}
+                    <p className="ml-6 text-xs text-muted-foreground">
                       {formatDistanceToNow(
                         new Date(notification.createdAt ?? new Date()),
-                        {
-                          addSuffix: true,
-                        }
+                        { addSuffix: true }
                       )}
                     </p>
                   </div>

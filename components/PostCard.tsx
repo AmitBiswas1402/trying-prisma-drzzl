@@ -93,15 +93,16 @@ function PostCard({ post, dbUserId }: { post: Post; dbUserId: string | null }) {
     }
   };
 
-  const handleDeleteComment = async (commentId: string) => {
-    if (deletingCommentId) return;
+  const handleConfirmDeleteComment = async () => {
+    if (!commentToDelete || isDeletingComment) return;
 
     try {
-      setDeletingCommentId(commentId);
-      const result = await deleteComment(commentId);
+      setIsDeletingComment(true);
+      const result = await deleteComment(commentToDelete);
 
       if (result.success) {
         toast.success("Comment deleted");
+        setCommentToDelete(null);
       } else {
         throw new Error();
       }
@@ -109,7 +110,7 @@ function PostCard({ post, dbUserId }: { post: Post; dbUserId: string | null }) {
       toast.error("Failed to delete comment");
       console.log(error);
     } finally {
-      setDeletingCommentId(null);
+      setIsDeletingComment(false);
     }
   };
 
@@ -258,7 +259,7 @@ function PostCard({ post, dbUserId }: { post: Post; dbUserId: string | null }) {
                             variant="ghost"
                             size="icon"
                             className="text-muted-foreground hover:text-red-500"
-                            onClick={() => handleDeleteComment(comment.id)}
+                            onClick={() => setCommentToDelete(comment.id)}
                             disabled={deletingCommentId === comment.id}
                           >
                             <X className="size-4" />
@@ -280,7 +281,7 @@ function PostCard({ post, dbUserId }: { post: Post; dbUserId: string | null }) {
                       placeholder="Write a comment..."
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
-                      className="min-h-[80px] resize-none"
+                      className="min-h-20px resize-none"
                     />
                     <div className="flex justify-end mt-2">
                       <Button
@@ -312,6 +313,15 @@ function PostCard({ post, dbUserId }: { post: Post; dbUserId: string | null }) {
                 </div>
               )}
             </div>
+          )}
+          {commentToDelete && (
+            <DeleteAlertDialog
+              isDeleting={isDeletingComment}
+              onDelete={handleConfirmDeleteComment}
+              onClose={() => setCommentToDelete(null)}
+              hideTrigger
+              open
+            />
           )}
         </div>
       </CardContent>

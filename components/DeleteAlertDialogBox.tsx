@@ -19,6 +19,9 @@ interface DeleteAlertDialogProps {
   onDelete: () => Promise<void>;
   title?: string;
   description?: string;
+  onClose?: () => void;
+  open?: boolean;
+  hideTrigger?: boolean;
 }
 
 export function DeleteAlertDialog({
@@ -26,22 +29,34 @@ export function DeleteAlertDialog({
   onDelete,
   title = "Delete Post",
   description = "This action cannot be undone.",
+  onClose,
+  open,
+  hideTrigger,
 }: DeleteAlertDialogProps) {
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-muted-foreground hover:text-red-500 -mr-2"
-        >
-          {isDeleting ? (
-            <Loader2Icon className="size-4 animate-spin" />
-          ) : (
-            <X className="size-4" />
-          )}
-        </Button>
-      </AlertDialogTrigger>
+    <AlertDialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose?.();
+        }
+      }}
+    >
+      {!hideTrigger && (
+        <AlertDialogTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-red-500 -mr-2"
+          >
+            {isDeleting ? (
+              <Loader2Icon className="size-4 animate-spin" />
+            ) : (
+              <X className="size-4" />
+            )}
+          </Button>
+        </AlertDialogTrigger>
+      )}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
