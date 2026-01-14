@@ -72,7 +72,7 @@ const CreatePost = () => {
 
           {/* IMAGE UPLOAD */}
           {(showImageUpload || imageURL) && (
-            <div className="border border-gray-200 rounded-xl p-4 bg-white shadow-sm">
+            <div className="border border-gray-800 rounded-xl p-4 bg-black shadow-sm">
               <ImageUpload
                 endpoint="postImage"
                 value={imageURL}
@@ -91,7 +91,7 @@ const CreatePost = () => {
               type="button"
               variant="ghost"
               size="sm"
-              className="text-gray-500 hover:text-blue-600 transition"
+              className="text-gray-100 hover:text-blue-600 transition"
               onClick={() => setShowImageUpload((p) => !p)}
             >
               <ImageIcon className="size-4 mr-2" />

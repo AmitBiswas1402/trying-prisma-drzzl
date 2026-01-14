@@ -1,3 +1,4 @@
+import { UploadDropzone } from "@/lib/uploadthing";
 import { XIcon } from "lucide-react";
 import Image from "next/image";
 
@@ -30,7 +31,17 @@ const ImageUpload = ({ endpoint, onChange, value }: ImageUploadProps) => {
   }
 
   return (
-    <div>ImageUpload</div>
+    <div>
+      <UploadDropzone  
+        endpoint={endpoint}
+        onClientUploadComplete={(res) => {
+          onChange(res?.[0].url);
+        }}
+        onUploadError={(error: Error) => {
+          console.log(error);
+        }}
+      />
+    </div>
   )
 }
 export default ImageUpload

@@ -9,7 +9,7 @@ import {
 } from "@/actions/post.action";
 import { SignInButton, useUser } from "@clerk/nextjs";
 import { useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { Card, CardContent } from "./ui/card";
 import Link from "next/link";
 import { Avatar, AvatarImage } from "./ui/avatar";
@@ -133,7 +133,7 @@ function PostCard({ post, dbUserId }: { post: Post; dbUserId: string | null }) {
                     href={`/profile/${post.author.username}`}
                     className="font-semibold truncate"
                   >
-                    {post.author.username}
+                    {post.author.fullName ?? post.author.username}
                   </Link>
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                     <Link href={`/profile/${post.author.username}`}>

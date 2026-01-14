@@ -38,6 +38,8 @@ export async function getPosts() {
         author: {
           id: users.id,
           username: users.username,
+          name: users.name,
+          fullName: users.name,
           image: users.image,
         },
       })
@@ -60,6 +62,7 @@ export async function getPosts() {
           id: users.id,
           username: users.username,
           name: users.name,
+          fullName: users.name, 
           image: users.image,
         },
       })
