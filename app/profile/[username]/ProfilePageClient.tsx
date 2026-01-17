@@ -275,7 +275,7 @@ const ProfilePageClient = ({
                   onChange={(e) =>
                     setEditForm({ ...editForm, bio: e.target.value })
                   }
-                  className="min-h-[100px]"
+                  className="min-h-25"
                   placeholder="Tell us about yourself"
                 />
               </div>
